@@ -15,8 +15,10 @@
     - ==Failure==
 
 # Graphs (1 problem)
-- [ ] Number of Islands — BFS/DFS core traversal; representative of most grid/graph GCA problems.
+- [x] Number of Islands — BFS/DFS core traversal; representative of most grid/graph GCA problems.
+    - ==Failure==
 
 # 1-D Dynamic Programming (2 problems)
-- [ ] Climbing Stairs — entry-level DP; understand subproblem/state transition.
+- [x] Climbing Stairs — entry-level DP; understand subproblem/state transition.
+    - ==Failure==
 - [ ] House Robber — DP pattern: “take or skip” problem; classic medium variant.
