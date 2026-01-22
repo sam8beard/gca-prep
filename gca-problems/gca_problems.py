@@ -112,8 +112,8 @@ If no valid hand exists, return None.
 
 
 def first_valid_hand(cards):
-    # TODO: implement
-    pass
+
+    from collections import Counter
 
 
 def test_first_valid_hand():
@@ -322,10 +322,10 @@ def run_tests():
     for test in tests:
         try:
             test()
-            print(f"[PASS] {test.__name__}")
+            print(f"[PASS] {test.__name__}\n")
             passed += 1
         except AssertionError:
-            print(f"[FAIL] {test.__name__}")
+            print(f"\n[FAIL] {test.__name__}\n")
 
     print(f"\nPassed {passed}/{len(tests)} tests")
 
