@@ -44,9 +44,3 @@
         - If not, mark it as visited
         - For the 4 adjacent positions of m\[r\]\[c\]:
             - If the position is valid (within the bounds of the grid), enqueue it to be explored later
-
-### Recursive + Adjacency Matrix
-#### Main Data Structured Used
-- 
-#### Algorithm
--
