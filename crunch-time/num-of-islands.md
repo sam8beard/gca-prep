@@ -3,6 +3,7 @@
 ## OUTCOME
 ==***Failure***==
 
+Iterative Approach
 ### Optimal Pattern (from solution)
 > What pattern is used in the optimal solution?
 
@@ -44,61 +45,108 @@
 
 ## CODE
 
+### DFS Iterative Solution
 ```Python
-grid_1 = [
-  ["1","1","1","1","0"],
-  ["1","1","0","1","0"],
-  ["1","1","0","0","0"],
-  ["0","0","0","0","0"]
-]
+class Solution:
+    def numIslands(self, grid: List[List[str]]) -> int:
+        '''
+        For every cell that contains a 1 and hasnt been visited, 
+        complete dfs on this cell using 1 indicating a valid path
 
-grid_2 = [
-  ["1","1","0","0","0"],
-  ["1","1","0","0","0"],
-  ["0","0","1","0","0"],
-  ["0","0","0","1","1"]
-]
+        During dfs on a given cell, count the amount of newly visited nodes and return the final count 
 
-directions = [(0, -1), (-1, 0), (1, 0), (0, 1)]
-visited = set()
 
-def dfs(grid, r, c, rows, cols):
+        '''                    
+        DIRS = [(-1, 0), (1, 0), (0, 1), (0, -1)]
+        ROWS = len(grid)
+        COLS = len(grid[0]) 
+        visited = set()
+        islands = {}
+        def dfs(r, c): 
             island_size = 0
-            print(f'Starting search from position {r, c}\n\n')
             stack = [(r, c)]
-            while stack:
+
+            while stack: 
                 curr_row, curr_col = stack.pop()
-                if (curr_row, curr_col) in visited:
+                if (curr_row, curr_col) in visited: 
                     continue
-                
-                island_size += 1
-                print(f'new neighbor found for {r, c}')
+
                 visited.add((curr_row, curr_col))
-                
-                for dr, dc in directions:
-                    new_row = curr_row + dr
-                    new_col = curr_col + dc 
-                    if 0 <= new_row < rows and 0 <= new_col < cols and grid[new_row][new_col] == "1" and (new_row, new_col) not in visited:
-                        
+                island_size += 1
+                for dr, dc in DIRS:
+                    new_row, new_col = curr_row + dr, curr_col + dc
+                    if 0 <= new_row < ROWS \
+                    and 0 <= new_col < COLS \
+                    and grid[new_row][new_col] == "1" \
+                    and (new_row, new_col) not in visited: 
+                       
                         stack.append((new_row, new_col))
-                    
-            # # total edges from r -> c
-            # print(f'Total edges from {r} -> {c}: {total_edges}\n\n')
             return island_size
 
-def get_rows_and_cols(grid):
-    return len(grid), len(grid[0])
-    
-def num_islands(grid):
-    
-    rows, cols = get_rows_and_cols(grid)
-    island_sizes = {}
-    for i in range(rows):
-        for j in range(cols): 
-            if grid[i][j] == "1" and (i, j) not in visited:
-                island_sizes[(i, j)] = dfs(grid, i, j, rows, cols)
-                print(island_sizes)
-
-num_islands(grid_1)
+        for i in range(ROWS):
+            for j in range(COLS):
+                if grid[i][j] == "1" and (i, j) not in visited:
+                    # print("firing")
+                    islands[(i, j)] = dfs(i, j)
+        
+        return len(islands)
 ```
 
+### DFS Recursive solution
+```Python
+class Solution:
+    def numIslands(self, grid: List[List[str]]) -> int:
+        '''
+        For every cell that contains a 1 and hasnt been visited, 
+        complete dfs on this cell using 1 indicating a valid path
+
+        During dfs on a given cell, count the amount of newly visited nodes and return the final count 
+
+
+        '''                    
+        DIRS = [(-1, 0), (1, 0), (0, 1), (0, -1)]
+        ROWS = len(grid)
+        COLS = len(grid[0]) 
+        
+        visited = set()
+        res = 0
+        
+        def dfs(r, c): 
+
+            '''
+            The logic of the recursive approach:
+            - if this cell is out of bounds, has been seen, or is water:
+                --> stop looking down this path
+            - otherwise:
+                --> mark the cell as seen
+                --> try looking down all adjacent paths from this cell
+
+            - once all function calls return from a root dfs call:
+                --> we have reached the borders of an island, and can 
+                    increment the number of islands
+            '''
+            if (r < 0 or c < 0 \
+            or r >= ROWS or c >= COLS \
+            or (r, c) in visited \
+            or grid[r][c] == "0"):
+                return
+
+            
+            visited.add((r, c))
+            for dr, dc in DIRS: 
+                dfs(r + dr, c + dc)
+          
+        
+        
+        for i in range(ROWS):
+            for j in range(COLS):
+                if grid[i][j] == "1" and (i, j) not in visited:
+                    
+                    dfs(i, j)
+                    res += 1
+        return res
+```
+
+### BFS Solution
+```Python
+```
