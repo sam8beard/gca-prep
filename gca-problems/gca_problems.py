@@ -317,47 +317,169 @@ If none exist, return -1.
 """
 
 
+def display_grid(grid):
+    # Print figure
+    for r in range(len(grid)):
+        print(f'{grid[r]}\n')
+
+    print("\n")
+
+
 def find_full_line(field, figure):
+    print("Figure")
+    display_grid(figure)
+    print("Field")
+    display_grid(field)
     """
-    I'm gonna assume the field will always be as deep or deeper than the figure
+    n = len(field)
+    m = len(field[0])
+    fig_h = len(figure)
+    fig_w = len(figure[0])
+
+    for drop_pos in range(m - fig_w + 1):
+        # deep copy the field
+        temp_field = [row[:] for row in field]
+
+        # determine how far the figure can fell
+        max_drop = n - fig_h
+        for r in range(n - fig_h + 1):
+            collision = False
+            for fr in range(fig_h):
+                for fc in range(fig_w):
+                    if figure[fr][fc] == 1 and temp_field[r + fr][drop_pos + fc] == 1:
+                        collision = True
+                        break
+                if collision:
+                    break
+            if collision:
+                max_drop = r - 1
+                break
+        if max_drop < 0:
+            continue
+
+        # place the figure
+        for fr in range(fig_h):
+            for fc in range(fig_w):
+                if figure[fr][fc] == 1:
+                    temp_field[max_drop + fr][drop_pos + fc] = 1
+                    display_grid(temp_field)
+        # check for a full row
+        for row in temp_field:
+            if all(cell == 1 for cell in row):
+                return drop_pos
+    return - 1
+
     """
+    import copy
+
+    field_width = len(field[0])
+    field_height = len(field)
+    fig_width = len(figure[0])
+    fig_height = len(figure)
     drop_pos = 0
+    for drop_pos in range(0, field_width - fig_width + 1):
+        print(f'Drop position: {drop_pos}')
+        # reset state of field
+        temp_field = copy.deepcopy(field)
+        # drop each column of the figure
+        for fig_c in range(fig_width):
+
+            # print(fig_c)
+            # corresponding field column to drop the figure column values into
+            field_c = drop_pos + fig_c
+
+            """
+            Starting from the bottom cell in figure, 
+            drop each cell value into the corresponding field column
+            """
+            for fig_r in range(fig_height - 1, -1, -1):
+                """
+                Move the value downwards, until:
+                - a collision is detected (there is a 1 below the current field row)
+                - the bottom is reached (field row == len(field) - 1)
+                """
+                # print(fig_r)
+                # get figure cell value
+                fig_block = figure[fig_r][fig_c]
+
+                # if cell value is 0, skip
+                if fig_block == 0:
+                    continue
+
+                print(f'{fig_block} being dropped into column {field_c}')
+
+                # Go row by row in the field, starting from the top, placing values in field
+                field_r = 0
+                while field_r + 1 < len(temp_field) and temp_field[field_r + 1][field_c] == 0:
+                    field_r += 1
+
+                # place dropped value into field cell
+                temp_field[field_r][field_c] = fig_block
+                display_grid(temp_field)
+            print()
+        # scan rows for win condition
+        for field_r in temp_field:
+            if all(cell == 1 for cell in field_r):
+                print("Firing in win condition:", drop_pos)
+                return drop_pos
+    return -1
+
+    """
+    # Starting column position in field that the figure is being dropped from
+    drop_pos = 0
+
     # Iteratively drop the figure from a drop position
-    while drop_pos + len(figure[0]) <= len(field[0]):
+    while 0 <= drop_pos <= (len(field[0]) - len(figure[0])):
         # print(drop_pos, len(figure[0]), len(field[0]))
-        print(f'Dropping figure at column {drop_pos} in field')
-        temp_field = field
-        temp_fig = figure
+        # print(f'Dropping figure at column {drop_pos} in field')
 
-        # Compute resulting columns in field using the dropped
-        # values from the figure
+        # Reset state for next drop
+        temp_field = field[:]
+        temp_fig = figure[:]
+
+        # Figure column being dropped
         fig_col = 0
+        # Drop a columns of values from the figure into the field
         for field_c in range(drop_pos, len(temp_fig[0]), 1):
+            print("first level 1")
+            # Current row in the field being evaluated
             field_level = 0
-
             # Traverse down a column of the field
-            field_column = []
             while field_level < len(temp_field):
-                field_column.append(temp_field[field_level][field_c])
-                field_level += 1
-            print(f'Current field column: {field_column}')
-            # Get values from fig being dropped into this field column
-            fig_column = []
-            for fig_r in range(len(temp_fig[0]) - 1, -1, -1):
-                print(fig_r, fig_col)
-                fig_column.append(temp_fig[fig_r][fig_col])
-            print(f'Current fig column: {fig_column}')
-            # print(fig_col)
-            # print(field_c)
-            fig_col += 1
+                print("second level 1")
+                # Drop a column of values from the figure
+                for fig_r in range(len(temp_fig[0]) - 1, -1, -1):
+                    print("third level 1")
+                    # Does a piece exist in the figure column?
+                    if temp_fig[fig_r][fig_col] == 1:
+                        print("piece exists in figure")
+                        # Move the piece down until the bottom of the field is hit, or the cell below is not empty
+                        # While the cell below the piece is empty
+                        inbounds = field_level + 1 < len(temp_field)
+                        if inbounds:
+                            print("inbounds")
+                            print(temp_field[field_level + 1])
+                            print(temp_field[field_level + 1][field_c])
+                            while temp_field[field_level + 1][field_c] == 0:
+                                print("moving down")
+                                print(fig_r, fig_col)
+                                print(temp_fig[fig_r][fig_col])
+                                temp_field[field_level +
+                                           1][field_c] = temp_fig[fig_r][fig_col]
 
-        # Increment drop position
+                                # Evaluate next row of values in the field
+                                field_level += 1
+                # Evaluate next row of values in the field
+                field_level += 1
+            # Drop next column of values
+            fig_col += 1
+        # Move drop position right
         drop_pos += 1
-    print(drop_pos)
+        """
 
 
 def test_find_full_line():
-    # --- Test Case 1: Basic collision + multiple valid columns ---
+    # --- Test Case 1:  One valid column ---
     field1 = [
         [0, 0, 0, 0],
         [1, 1, 1, 0],
@@ -368,7 +490,7 @@ def test_find_full_line():
         [0, 1, 0],
         [0, 1, 0]
     ]
-    assert find_full_line(field1, figure1) in [0, 1, -1]
+    assert find_full_line(field1, figure1) == 1
 
     # --- Test Case 2: Empty field, figure fits anywhere ---
     field2 = [
@@ -385,7 +507,7 @@ def test_find_full_line():
     # Any column where the 3x3 figure fits horizontally is valid (0 only)
     assert find_full_line(field2, figure2) == 0
 
-    # --- Test Case 3: No valid drop produces a full row ---
+    # --- Test Case 3 ---
     field3 = [
         [0, 0, 0, 0],
         [1, 0, 1, 0],
@@ -396,7 +518,7 @@ def test_find_full_line():
         [0, 1, 1],
         [1, 0, 1]
     ]
-    assert find_full_line(field3, figure3) == -1
+    assert find_full_line(field3, figure3) == 1
 
     # --- Test Case 4: Figure can fill bottom row exactly ---
     field4 = [
