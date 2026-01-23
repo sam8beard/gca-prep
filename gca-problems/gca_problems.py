@@ -112,7 +112,6 @@ If no valid hand exists, return None.
 
 
 def first_valid_hand(cards):
-    print(f'\n\nTesting first_valid_hand: {cards}')
     """
     Given a list of strings, we need to find the first combination of 3 strings whose characters are either:
     - Exactly the same
@@ -120,17 +119,13 @@ def first_valid_hand(cards):
     - Completely unique
 
     Given a list of tuples, we need to find the first 3 tuples that either:
-    - Are exactly the same 
+    - Are exactly the same
         OR
     - Are completely unique
 
     """
-    # How should we approach? 
-    # ---> I dont think we should look at every possible combination of cards until we find 3 
-    # What conditions cause updates? 
-    # ---> 
-    # will keep track of seen cards
-    tups = []
+
+    # Build tuples from strings for evaluation
     d = {}
     for i in range(len(cards)):
 
@@ -141,98 +136,36 @@ def first_valid_hand(cards):
         suit = [char for char in c if not char.isalpha()].pop()
 
         d[i] = (count, suit, val)
-        tups.append((count, suit, val))
-    """
-    Now that we have a hashmap of each strings position in the cards and its properties,
-    whats next?
 
-    hand = []
-    for i, props in d.items():
-        # base case
-        if len(hand) == 3: return hand
-         
-        if these props are the same as every element in the hand,
-        --> add the props to the hand
-
-        if these props are distinct from every element in the hand, 
-        --> add the props to the hand 
-
-        else, 
-        --> do nothing
-    """
-    def is_valid(hand): 
+    def is_valid(hand):
         # validate hand under constraints
-        # print(hand[0])
-        chars = list(hand[0]) + list(hand[1]) + list(hand[2])
-        print(list(hand[0]))
-        all_chars = set(chars)
-        print(chars)
-        if (len(set(hand)) == 1):
-            # print("Valid triplet found:", hand)
-            return True
-        elif len(set(chars)) == len(chars):
+        counts = [hand[0][0], hand[1][0], hand[2][0]]
+        suits = [hand[0][1], hand[1][1], hand[2][1]]
+        values = [hand[0][2], hand[1][2], hand[2][2]]
+
+        valid_counts = (len(counts) == len(set(counts))
+                        or (len(set(counts)) == 1))
+        valid_suits = (len(suits) == len(set(suits))
+                       or (len(set(suits)) == 1))
+        valid_values = (len(values) == len(set(values))
+                        or (len(set(values)) == 1))
+
+        if valid_counts and valid_suits and valid_values:
             return True
         return False
-        
+
     # Brute force
     for i in range(len(d)):
-        for j in range(i + 1, len(d)): 
+        for j in range(i + 1, len(d)):
             for k in range(j + 1, len(d)):
-                # print(d[i], d[j], d[k])
                 if is_valid([d[i], d[j], d[k]]):
                     return [cards[i], cards[j], cards[k]]
     return None
-    """
-    Optimal approach attempt
-
-    hand = []
-    tups = []
-    e = 0
-    for i, props in d.items():
-        print(e)
-        # print("Current props:", props)
-        # base case
-        if len(hand) == 3:
-            print(len(tups))
-            print(len(set(tups)))
-            # if every element in the hand of 3 is not distinct or every element is not identical
-            # --> how should we reset state and continue? 
-
-            # This says "if 3 cards are in the hand and they are all distinct"
-            if len(tups) == len(set(tups)):
-                print()
-                return hand
-            # This says "if 3 cards are in the hand and they are all the same"
-            elif len(set(tups)) == 1:
-                print()
-                return hand
-
-        # how do we reset the state properly??? 
-        # something that allows us to try every possible combination
-
-        unique = set(tups)
-        if len(unique) == 1 and props in unique: 
-            print("Same as every element")
-            print(f'Adding {props} to hand')
-            tups.append(props)
-            hand.append(cards[i])
-        if props not in tups:
-            print(props)
-            print(tups)
-            print("Distinct from all other props")
-            print(f'Adding {props} to hand')
-            tups.append(props)
-            hand.append(cards[i])
-        e += 1
-    return None
-    """
-
-    
 
 
 def test_first_valid_hand():
     global CURRENT_TEST_CASE
-    
+
     CURRENT_TEST_CASE = "original"
     cards = ["+AA", "-AA", "+AA", "-C", "-B", "+AA", "-AAA", "-A", "=AA"]
     res = first_valid_hand(cards)
@@ -251,17 +184,17 @@ def test_first_valid_hand():
     res = first_valid_hand(cards)
     assert res == ["+A", "-B", "=C"]
 
-    # case 3: duplicates early, valid later
-    CURRENT_TEST_CASE = "duplicates early, valid later"
+    # case 3: invalid
+    CURRENT_TEST_CASE = "dupes early, valid later"
     cards = ["+AA", "+AA", "-AA", "+B", "-C", "=D"]
     res = first_valid_hand(cards)
     assert res == ["+B", "-C", "=D"]
 
-    # case 4: no valid hand
-    CURRENT_TEST_CASE = "no valid hand"
+    # case 4: valid hand
+    CURRENT_TEST_CASE = "valid hand"
     cards = ["+AA", "-AA", "=AA", "+AB", "-AB"]
     res = first_valid_hand(cards)
-    assert res is None
+    assert res == ["+AA", "-AA", "=AA"]
 
     # case 5: exactly three, valid (unique)
     CURRENT_TEST_CASE = "exactly three valid, unique"
@@ -275,11 +208,12 @@ def test_first_valid_hand():
     res = first_valid_hand(cards)
     assert res == ["-BBB", "-BBB", "-BBB"]
 
-    # case 7: valid hand appears later, mixed lengths
-    CURRENT_TEST_CASE = "valid hand appears later, mixed lengths"
+    # case 7: invalid hand
+    CURRENT_TEST_CASE = "invalid hand"
     cards = ["+A", "+A", "-AA", "+B", "=CC", "-D"]
     res = first_valid_hand(cards)
-    assert res == ["+B", "=CC", "-D"]
+    assert res is None
+
 
 # ============================================================
 # 4. Character Cascade from String Array
@@ -300,11 +234,21 @@ Output: "DRHPaoyoisapsecpyiynth"
 
 
 def char_cascade(arr):
-    # TODO: implement
-    pass
+    from collections import defaultdict
+    d = defaultdict(str)
+    res = ""
+    for i in range(len(arr)):
+        for j in range(len(arr[i])):
+            d[j] += arr[i][j]
+
+    for v in d.values():
+        res += v
+    return res
 
 
 def test_char_cascade():
+    assert char_cascade(["Daisy", "Rose", "Hyacinth", "Poppy"]
+                        ) == "DRHPaoyoisapsecpyiynth"
     assert char_cascade(["abc", "de", "f"]) == "adfbec"
     assert char_cascade(["a", "b", "c"]) == "abc"
     assert char_cascade(["ab", ""]) == "ab"
@@ -330,8 +274,21 @@ Return the count of valid words.
 
 
 def count_valid_words(string, letters):
-    # TODO: implement
-    pass
+    import string as s
+
+    word_list = [x.lower() for x in string.split()]
+    letter_list = list(letters)
+    d = {0: [], 1: []}
+
+    for i in range(len(word_list)):
+        cleaned = ""
+        for c in word_list[i]:
+            if (c in s.punctuation or c.isdigit()) or \
+                    (c.isalpha() and c in letter_list):
+                cleaned += c
+        valid = cleaned == word_list[i]
+        d[valid].append(word_list[i])
+    return len(d[1])
 
 
 def test_count_valid_words():
@@ -361,22 +318,138 @@ If none exist, return -1.
 
 
 def find_full_line(field, figure):
-    # TODO: implement
-    pass
+    """
+    I'm gonna assume the field will always be as deep or deeper than the figure
+    """
+    drop_pos = 0
+    # Iteratively drop the figure from a drop position
+    while drop_pos + len(figure[0]) <= len(field[0]):
+        # print(drop_pos, len(figure[0]), len(field[0]))
+        print(f'Dropping figure at column {drop_pos} in field')
+        temp_field = field
+        temp_fig = figure
+
+        # Compute resulting columns in field using the dropped
+        # values from the figure
+        fig_col = 0
+        for field_c in range(drop_pos, len(temp_fig[0]), 1):
+            field_level = 0
+
+            # Traverse down a column of the field
+            field_column = []
+            while field_level < len(temp_field):
+                field_column.append(temp_field[field_level][field_c])
+                field_level += 1
+            print(f'Current field column: {field_column}')
+            # Get values from fig being dropped into this field column
+            fig_column = []
+            for fig_r in range(len(temp_fig[0]) - 1, -1, -1):
+                print(fig_r, fig_col)
+                fig_column.append(temp_fig[fig_r][fig_col])
+            print(f'Current fig column: {fig_column}')
+            # print(fig_col)
+            # print(field_c)
+            fig_col += 1
+
+        # Increment drop position
+        drop_pos += 1
+    print(drop_pos)
 
 
 def test_find_full_line():
-    field = [
+    # --- Test Case 1: Basic collision + multiple valid columns ---
+    field1 = [
         [0, 0, 0, 0],
         [1, 1, 1, 0],
         [1, 1, 1, 0]
     ]
-    figure = [
+    figure1 = [
         [1, 1, 1],
         [0, 1, 0],
         [0, 1, 0]
     ]
-    assert find_full_line(field, figure) in [0, 1, -1]
+    assert find_full_line(field1, figure1) in [0, 1, -1]
+
+    # --- Test Case 2: Empty field, figure fits anywhere ---
+    field2 = [
+        [0, 0, 0],
+        [0, 0, 0],
+        [0, 0, 0],
+        [0, 0, 0]
+    ]
+    figure2 = [
+        [1, 0, 1],
+        [1, 1, 0],
+        [0, 1, 1]
+    ]
+    # Any column where the 3x3 figure fits horizontally is valid (0 only)
+    assert find_full_line(field2, figure2) == 0
+
+    # --- Test Case 3: No valid drop produces a full row ---
+    field3 = [
+        [0, 0, 0, 0],
+        [1, 0, 1, 0],
+        [0, 1, 0, 1]
+    ]
+    figure3 = [
+        [1, 1, 0],
+        [0, 1, 1],
+        [1, 0, 1]
+    ]
+    assert find_full_line(field3, figure3) == -1
+
+    # --- Test Case 4: Figure can fill bottom row exactly ---
+    field4 = [
+        [0, 0, 0, 0],
+        [1, 0, 1, 0],
+        [1, 1, 0, 0]
+    ]
+    figure4 = [
+        [1, 1, 0],
+        [0, 1, 1],
+        [0, 0, 1]
+    ]
+    # Only one column allows a full row at the bottom
+    assert find_full_line(field4, figure4) == 1
+
+    # --- Test Case 5: Figure partially occupied, multiple rows could be filled ---
+    field5 = [
+        [0, 0, 0, 0, 0],
+        [1, 1, 0, 1, 0],
+        [0, 1, 1, 0, 1]
+    ]
+    figure5 = [
+        [1, 1, 0],
+        [0, 1, 1],
+        [1, 0, 0]
+    ]
+    # Multiple columns could potentially produce a fully filled row
+    assert find_full_line(field5, figure5) in [0, 1, 2, -1]
+
+    # --- Test Case 6: Figure wider than field, invalid placement ---
+    field6 = [
+        [0, 0],
+        [0, 0],
+        [0, 0],
+    ]
+    figure6 = [
+        [1, 1, 1],
+        [1, 1, 1],
+        [1, 1, 1],
+    ]
+    assert find_full_line(field6, figure6) == -1
+
+    # --- Test Case 7: Single valid column at the far right ---
+    field7 = [
+        [0, 0, 0, 0],
+        [1, 0, 1, 0],
+        [1, 1, 0, 0]
+    ]
+    figure7 = [
+        [0, 1, 1],
+        [1, 0, 1],
+        [0, 1, 0]
+    ]
 
 
 # ============================================================
@@ -482,7 +555,7 @@ def run_tests():
             test()
             print(f"[PASS] {test.__name__}\n")
             passed += 1
-        except AssertionError: 
+        except AssertionError:
             case = f" — case: {CURRENT_TEST_CASE}" if CURRENT_TEST_CASE else ""
             print(f"\n[FAIL] {test.__name__}{case}\n")
 
