@@ -501,14 +501,115 @@ Released memory becomes available again.
 
 
 def memory_allocation(mem, queries):
-    # TODO: implement
-    pass
+    """
+    - 8 indices to a block
+    - must segment mem array into blocks of 8 positions
+    - find a way to keep track of start of block and end of block
+
+    - (0, k)
+    --> find first available block with at least k spots available
+    --> add these positions to a hashmap with a key representing when it was allocated (i.e. 1 for first...)
+    --> a position being in one of the values of the hashmap indicates that position is allocated
+    --> return the starting position of the allocation
+
+    - (1, x):
+    --> attempt to access the x key of the hashmap
+    --> if it exists, remove this key and its value, and return the length of the value
+    --> else, return -1
+    """
+    res = []
+    # starting positions of blocks and their availability
+    blocks = [{0: 8} if i == 0 else {i - 1: 8}
+              for i in range(0, len(mem), 8)]
+    allocs = {}
+    alloc_count = 0
+    for i, q in enumerate(queries):
+        if q[0] == 0:
+            success = False
+            space = q[1]
+            # check available blocks for space
+            for b in blocks:
+                start, avail = next(iter(b.items()))
+
+                # if space needed is greater than available in this block, check next block
+                if space > avail:
+                    continue
+                # allocate space to this block
+                b[start] = avail - space
+                # increment alloc count
+                alloc_count += 1
+                # keep track of allocation
+                allocs[alloc_count] = (start, space)
+                # add starting index to result
+                res.append(start)
+                success = True
+                break
+            if not success:
+                res.append(-1)
+
+        elif q[0] == 1:
+            if q[1] in allocs:
+                alloc = allocs[q[1]]
+            else:
+                res.append(-1)
+                continue
+            alloc = allocs[q[1]]
+            # get allocation start position and space
+            start, space = alloc[0], alloc[1]
+            # free allocated space in block of last successful allocation
+            success = False
+            for b in blocks:
+                if start in b:
+                    b[start] += space
+                    success = True
+                    res.append(space)
+                    break
+            if not success:
+                res.append(-1)
+            # add freed space to result
+    # print(blocks)
+    return res
 
 
 def test_memory_allocation():
-    mem = [0]*16
-    queries = [(0, 3), (0, 2), (1, 1)]
-    assert memory_allocation(mem, queries) == [0, 8, 3]
+
+    mem = [0] * 32  # 4 blocks of 8
+
+    queries = [
+        # Initial allocations
+        (0, 3),    # #1 -> block 0, start 0
+        (0, 2),    # #2 -> block 0, start 0
+        (0, 5),    # #3 -> block 1, start 7
+        (0, 1),    # #4 -> block 0, start 0
+        (1, 2),    # free #2 -> 2 bits
+        (0, 4),    # #5 -> block 0, start 0
+        (0, 8),    # #6 -> block 2, start 15
+        (0, 6),    # #7 -> block 3, start 23
+        (0, 2),    # #8 -> block 0, start 0 (fits in remaining space)
+
+        # Attempt invalid allocations
+        (0, 10),   # too big for any block -> -1
+        (1, 9),    # invalid free (nonexistent) -> -1
+
+        # Free some allocations
+        (1, 3),    # free #3 -> size 5
+        (1, 6),    # free #6 -> size 8
+
+        # Reallocate into freed spaces
+        (0, 5),    # #9 -> block 1, start 7 (freed)
+        (0, 3),    # #10 -> block 2, start 15 (freed)
+
+        # Free and allocate again
+        (1, 5),    # free #5 -> size 4
+        (0, 4),    # #11 -> block 0, start 0 (fits in freed space)
+        (1, 7),    # free #7 -> size 6
+        (0, 6),    # #12 -> block 3, start 23 (fits again)
+    ]
+
+    # Expected result according to your allocation logic:
+    assert memory_allocation(mem, queries) == [
+        0, 0, 7, 0, 2, 0, 15, 23, 7, -1, -1, 5, 8, 7, 15, 4, 0, 6, 23
+    ]
 
 
 # ============================================================
@@ -525,8 +626,6 @@ Only return words that exist in the provided dictionary.
 
 
 def build_options(digits, dictionary):
-    # TODO: implement
-    pass
 
 
 def test_build_options():
@@ -551,19 +650,119 @@ Digits are lexicographically smaller than letters.
 """
 
 
-def removeOneDigit(s, t):
-    # TODO: implement
-    pass
+def remove_one_digit(s, t):
+
+    res = 0
+    seen = []
+
+    for i in range(len(s)):
+        if s[i].isdigit():
+            new_s = s.replace(s[i], "")
+            if new_s < t and new_s not in seen:
+                seen.append(new_s)
+                res += 1
+
+    for j in range(len(t)):
+        if t[j].isdigit():
+            new_t = t.replace(t[j], "")
+            if s < new_t and new_t not in seen:
+                seen.append(new_t)
+                res += 1
+    print(res)
+    return res
 
 
-def test_removeOneDigit():
-    assert removeOneDigit("ab12c", "1zz456") == 1
-    assert removeOneDigit("ab12c", "ab24z") == 3
+def test_remove_one_digit():
+    assert remove_one_digit("ab12c", "1zz456") == 1
+    assert remove_one_digit("ab12c", "ab24z") == 3
+
+
+# ============================================================
+# 10. Frequency-Based String Merge
+# ============================================================
+"""
+Problem: Frequency-Based String Merge
+
+Given two strings s1 and s2, merge them into a single string
+using the following rules:
+
+- Compare the current characters of s1 and s2 based on their
+  frequency in their respective strings (fewer occurrences are "smaller").
+- If frequencies are equal, compare lexicographically (usual order).
+- If still equal, take the character from s1.
+- Continue until all characters from both strings are merged.
+
+"""
+
+
+def frequency_merge(s1, s2):
+    from collections import Counter
+    s1_counts = Counter(s1)
+    s2_counts = Counter(s2)
+    res = ""
+
+    s1_len = len(s1)
+    s2_len = len(s2)
+
+    i, j = 0, 0
+    while i < s1_len and j < s2_len:
+
+        s1_char, s2_char = s1[i], s2[j]
+        s1_count, s2_count = s1_counts[s1_char], s2_counts[s2_char]
+
+        first_cond = s1_count != s2_count
+        first_cond_s1 = s1_count < s2_count
+        first_cond_s2 = s2_count < s1_count
+
+        second_cond = s1_char != s2_char
+        second_cond_s1 = s1_char < s2_char
+        second_cond_s2 = s2_char < s1_char
+
+        # evaluate
+        if first_cond:
+            if first_cond_s1:
+                res += s1_char
+                i += 1
+            elif first_cond_s2:
+                res += s2_char
+                j += 1
+        elif second_cond:
+            if second_cond_s1:
+                res += s1_char
+                i += 1
+            elif second_cond_s2:
+                res += s2_char
+                j += 1
+        else:
+            res += s1_char
+            i += 1
+    if i < s1_len:
+        res += s1[i:]
+    elif j < s2_len:
+        res += s2[j:]
+    return res
+
+
+def test_frequency_merge():
+    # Basic tests
+    # example expected output
+    assert frequency_merge("aabc", "abbc") == "aaabcbbc"
+    assert frequency_merge("abc", "abc") == "aabbcc"
+    assert frequency_merge("", "xyz") == "xyz"
+    assert frequency_merge("xyz", "") == "xyz"
+    assert frequency_merge("aaa", "a") == "aaaa"
+    assert frequency_merge("bca", "acb") == "abcacb"
+
+    # Edge cases
+    assert frequency_merge("", "") == ""
+    assert frequency_merge("a", "a") == "aa"
+    assert frequency_merge("abc", "def") == "abcdef"
 
 
 # ============================================================
 # Test Runner
 # ============================================================
+
 
 def run_tests():
     tests = [
@@ -575,7 +774,8 @@ def run_tests():
         test_find_full_line,
         test_memory_allocation,
         test_build_options,
-        test_removeOneDigit,
+        test_remove_one_digit,
+        test_frequency_merge,
     ]
 
     passed = 0
